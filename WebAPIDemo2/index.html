@@ -1,7 +1,9 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title></title>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script src="Content/JavaScript/date.format.js"></script>
+    <title>WebAPI Demo</title>
 </head>
 <body>
     <br />
@@ -14,13 +16,12 @@
         <ul>
         </ul>
     </div>
-    <script src="Content/JavaScript/date.format.js"></script>
-    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    
     <script type="text/javascript">
         var apiURI = 'api/Albumns';
 
         $(document).ready(function () {
-            getAll();
+            queryAll();
 
             $("#searchBtn").bind("click", function () {
                 console.log("search btn bind click is ready.")
@@ -28,47 +29,84 @@
             })
         })
 
-        function getAll() {
+        // Retrieve all info from backend.
+        function queryAll() {
 
-            clearAlbumns();
+            clear();
 
             $.getJSON(apiURI).done(function (data) {
                 $.each(data, function (key, item) {
                     $("#allAlbumns ul").append('<li>' + formatItem(item) + '</li>')
                 })
 
-                // Bind here.
-                $(".deleteBtn").bind("click", function () {
-                    //alert('ok here');
-                    var idToDelete = $(this).attr("idToDelete");
-                    console.log("idToDelete:" + idToDelete);
-                    toDelete(idToDelete);
-                })
+                bind();
+            })
+        }
+
+        var flag = false;
+        function bind()
+        {
+            $('.edit_span').hide();
+
+            // Bind here.
+            $(".deleteBtn").bind("click", function () {
+                var idToDelete = $(this).attr("idToDelete");
+                console.log("idToDelete:" + idToDelete);
+                toDelete(idToDelete);
+            })
+
+            // Bind here.
+            $(".editBtn").bind("click", function () {
+                
+                var idToEdit = $(this).attr("idToEdit");
+
+                if (!flag) {
+                    $(this).val('Update');
+                    $("#display_span_" + idToEdit).hide();
+                    $("#edit_span_" + idToEdit).show();
+                    flag = true;
+                } else {
+                    $(this).val('Edit');
+                    $("#display_span_" + idToEdit).show();
+                    $("#edit_span_" + idToEdit).hide();
+                    flag = false;
+                }
+
+                console.log("idToEdit:" + idToEdit);
+                // toDelete(idToEdit);
             })
         }
 
         function formatItem(item) {
-            return item.ID + " " + item.Name + " " + new Date(item.ReleaseDate).format("yyyy-mm-dd") + " " + item.Band.Name
-                + " <input class='deleteBtn' type='button' idToDelete='" + item.ID + "' value='Delete' />";
+            return "<span id='display_span_" + item.ID + "' class='display_span'>" + item.ID + " " + item.Name + " " + new Date(item.ReleaseDate).format("yyyy-mm-dd") + " " + item.Band.Name + " </span>" +
+            " <span id='edit_span_" + item.ID + "' class='edit_span'> " +
+                item.ID + 
+                " <input type='text' class='Name' value='" + item.Name + "' />" +
+                " <input type='text' class='ReleaseDate' value='" + new Date(item.ReleaseDate).format("yyyy-mm-dd") + "' />" +
+                " <input type='text' class='BandName' value='" + item.Band.Name + "' />" +
+            " </span>" +
+            " <input class='deleteBtn' type='button' idToDelete='" + item.ID + "' value='Delete' />" + 
+            " <input class='editBtn' type='button' idToEdit='" + item.ID + "' value='Edit' />";
         }
 
-        function clearAlbumns() {
+        function clear() {
             $("#allAlbumns ul").empty();
         }
 
         function find(key) {
            
-            clearAlbumns();
+            clear();
 
             var searchKey = key;
             $.getJSON(apiURI + "/" + searchKey)
                 .done(function (data) {
                     if (data.length <= 0) {
-                        $("#allAlbumns ul").append('<li>no data.</li>')
+                        $("#allAlbumns ul").append('<li>no data.</li>');
                     }
                     $.each(data, function (key, item) {
                         $("#allAlbumns ul").append('<li>' + formatItem(item) + '</li>')
-                    })
+                    });
+                    bind();
                 })
                 .fail(function (jqXHR, textStatus, err) {
                     $('#allAlbumns').text('Error: ' + err);
@@ -83,7 +121,7 @@
                     statusCode: {
                         200: function (data) {
                             console.log(data.Name + " deleted.");
-                            getAll();
+                            queryAll();
                         }
                     }
                 });
