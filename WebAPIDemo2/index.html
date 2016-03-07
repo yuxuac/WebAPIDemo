@@ -31,62 +31,72 @@
 
         // Retrieve all info from backend.
         function queryAll() {
-
             clear();
-
             $.getJSON(apiURI).done(function (data) {
+
                 $.each(data, function (key, item) {
-                    $("#allAlbumns ul").append('<li>' + formatItem(item) + '</li>')
+                    $("#allAlbumns ul").append("<li id='al_" + item.ID + "' class='lis' isEditing=false>" + formatItem(item) + '</li>')
                 })
 
                 bind();
             })
         }
 
-        var flag = false;
-        function bind()
-        {
-            $('.edit_span').hide();
+        function bind() {
+            var li = $(".lis");
+            var edit_span = $(li).find(".edit_span");
+            var deleteBtn = $(li).find(".deleteBtn");
+            var editBtn = $(li).find(".editBtn");
+
+            edit_span.hide();
 
             // Bind here.
-            $(".deleteBtn").bind("click", function () {
+            $(deleteBtn).bind("click", function () {
                 var idToDelete = $(this).attr("idToDelete");
                 console.log("idToDelete:" + idToDelete);
                 toDelete(idToDelete);
             })
 
-            // Bind here.
-            $(".editBtn").bind("click", function () {
-                
-                var idToEdit = $(this).attr("idToEdit");
+            $(editBtn).bind("click", function () {
 
-                if (!flag) {
+                var li = $(this).closest("li");
+                var isEditing = $(li).attr("isEditing");
+                var idToEdit = $(li).attr("id");
+                var display_span = $(li).find(".display_span");
+                var edit_span = $(li).find(".edit_span");
+
+                var name = $(li).find(".name");
+                var releaseDate = $(li).find(".releaseDate");
+                var bandName = $(li).find(".bandName");
+
+                var val = $(this).val();
+
+                if (isEditing === 'false') {
                     $(this).val('Update');
-                    $("#display_span_" + idToEdit).hide();
-                    $("#edit_span_" + idToEdit).show();
-                    flag = true;
-                } else {
+                    display_span.hide();
+                    edit_span.show();
+                    $(li).attr("isEditing", true);
+                } else if (isEditing === 'true' && val === "Update") {
+                    console.log("PostData name:" + name.val() + " releaseDate:" + releaseDate.val() + " bandName:" + bandName.val());
+                    $(li).attr("isEditing", false);
                     $(this).val('Edit');
-                    $("#display_span_" + idToEdit).show();
-                    $("#edit_span_" + idToEdit).hide();
-                    flag = false;
+                    display_span.show();
+                    edit_span.hide();
                 }
-
                 console.log("idToEdit:" + idToEdit);
-                // toDelete(idToEdit);
             })
         }
 
         function formatItem(item) {
-            return "<span id='display_span_" + item.ID + "' class='display_span'>" + item.ID + " " + item.Name + " " + new Date(item.ReleaseDate).format("yyyy-mm-dd") + " " + item.Band.Name + " </span>" +
-            " <span id='edit_span_" + item.ID + "' class='edit_span'> " +
-                item.ID + 
-                " <input type='text' class='Name' value='" + item.Name + "' />" +
-                " <input type='text' class='ReleaseDate' value='" + new Date(item.ReleaseDate).format("yyyy-mm-dd") + "' />" +
-                " <input type='text' class='BandName' value='" + item.Band.Name + "' />" +
-            " </span>" +
-            " <input class='deleteBtn' type='button' idToDelete='" + item.ID + "' value='Delete' />" + 
-            " <input class='editBtn' type='button' idToEdit='" + item.ID + "' value='Edit' />";
+            return "<span class='display_span'>" + item.ID + " " + item.Name + " " + new Date(item.ReleaseDate).format("yyyy-mm-dd") + " " + item.Band.Name + " </span>" +
+                  " <span class='edit_span'> " +
+                    item.ID + 
+                    " <input type='text' class='name' value='" + item.Name + "' />" +
+                    " <input type='text' class='releaseDate' value='" + new Date(item.ReleaseDate).format("yyyy-mm-dd") + "' />" +
+                    " <input type='text' class='bandName' value='" + item.Band.Name + "' />" +
+                  " </span>" +
+                  " <input class='deleteBtn' type='button' value='Delete' />" + 
+                  " <input class='editBtn' type='button' value='Edit' />";
         }
 
         function clear() {
